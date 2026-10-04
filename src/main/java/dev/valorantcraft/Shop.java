@@ -14,7 +14,7 @@ import net.minecraft.world.SimpleMenuProvider;
 import net.minecraft.world.entity.player.Inventory;
 import net.minecraft.world.entity.player.Player;
 import net.minecraft.world.inventory.ChestMenu;
-import net.minecraft.world.inventory.ClickType;
+import net.minecraft.world.inventory.ContainerInput;
 import net.minecraft.world.inventory.MenuType;
 import net.minecraft.world.item.Item;
 import net.minecraft.world.item.ItemStack;
@@ -49,11 +49,6 @@ public final class Shop {
     }
 
     private static void refresh(Container c, Player player) {
-        for (int i = 0; i < 27; i++) {
-            ItemStack pane = new ItemStack(Items.BLACK_STAINED_GLASS_PANE);
-            pane.set(DataComponents.CUSTOM_NAME, Component.literal(" "));
-            c.setItem(i, pane);
-        }
         for (int i = 0; i < IDS.length; i++) {
             ItemStack st = new ItemStack(ValorantCraft.ITEMS.get(IDS[i]));
             st.set(DataComponents.CUSTOM_NAME, Component.literal(NAMES[i] + " - " + PRICES[i] + " Credits"));
@@ -94,8 +89,8 @@ public final class Shop {
         }
 
         @Override
-        public void clicked(int slotId, int button, ClickType clickType, Player player) {
-            if (!(player instanceof ServerPlayer sp) || clickType != ClickType.PICKUP) return;
+        public void clicked(int slotId, int button, ContainerInput input, Player player) {
+            if (!(player instanceof ServerPlayer sp) || input != ContainerInput.PICKUP) return;
             for (int i = 0; i < SLOTS.length; i++) {
                 if (slotId == SLOTS[i]) {
                     tryBuy(sp, i, shop);
