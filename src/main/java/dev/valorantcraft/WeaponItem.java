@@ -4,7 +4,12 @@ import java.util.HashMap;
 import java.util.Map;
 import java.util.Optional;
 
+import net.minecraft.core.registries.Registries;
 import net.minecraft.network.chat.Component;
+import net.minecraft.network.protocol.game.ClientboundSetActionBarTextPacket;
+import net.minecraft.resources.Identifier;
+import net.minecraft.resources.ResourceKey;
+import net.minecraft.world.damagesource.DamageType;
 import net.minecraft.core.particles.ParticleTypes;
 import net.minecraft.server.level.ServerLevel;
 import net.minecraft.server.level.ServerPlayer;
@@ -40,7 +45,14 @@ public class WeaponItem extends Item {
     // Prototyp: Munition liegt im Speicher (pro Spieler + Waffe), nicht im Item.
     private static final Map<String, State> STATES = new HashMap<>();
 
+    private static final ResourceKey<DamageType> BULLET = ResourceKey.create(Registries.DAMAGE_TYPE,
+            Identifier.fromNamespaceAndPath("valorantcraft", "bullet"));
+
     private final Weapon weapon;
+
+    private static void actionBar(ServerPlayer player, String text) {
+        player.connection.send(new ClientboundSetActionBarTextPacket(Component.literal(text)));
+    }
 
     public WeaponItem(Properties properties, Weapon weapon) {
         super(properties);
@@ -62,7 +74,7 @@ public class WeaponItem extends Item {
                 s.ammo = weapon.magSize();
                 s.reloadDone = -1;
             } else {
-                sp.displayClientMessage(Component.literal("Nachladen..."), true);
+                actionBar(sp, "Nachladen...");
                 return InteractionResult.SUCCESS;
             }
         }
@@ -73,7 +85,7 @@ public class WeaponItem extends Item {
                 s.reloadDone = now + weapon.reloadTicks();
                 serverLevel.playSound(null, player.getX(), player.getY(), player.getZ(),
                         SoundEvents.CROSSBOW_LOADING_MIDDLE.value(), SoundSource.PLAYERS, 1.0f, 1.0f);
-                sp.displayClientMessage(Component.literal("Nachladen..."), true);
+                actionBar(sp, "Nachladen...");
             }
             return InteractionResult.SUCCESS;
         }
@@ -85,7 +97,7 @@ public class WeaponItem extends Item {
         s.ammo--;
 
         shoot(serverLevel, sp);
-        sp.displayClientMessage(Component.literal(weapon.id().toUpperCase() + "  " + s.ammo + " / " + weapon.magSize()), true);
+        actionBar(sp, weapon.id().toUpperCase() + "  " + s.ammo + " / " + weapon.magSize());
         return InteractionResult.SUCCESS;
     }
 
@@ -143,9 +155,10 @@ public class WeaponItem extends Item {
         if (target instanceof LivingEntity living) {
             boolean headshot = targetPos.y >= living.getEyeY() - 0.25;
             float damage = headshot ? weapon.headDamage() : weapon.bodyDamage();
-            living.invulnerableTime = 0; // sonst blockt Minecraft schnelle Folgetreffer
-            living.hurtServer(level, level.damageSources().playerAttack(player), damage);
-            player.playNotifySound(headshot ? SoundEvents.PLAYER_LEVELUP : SoundEvents.ARROW_HIT_PLAYER,
+            // Eigener Schadenstyp "bullet" umgeht Minecrafts Treffer-Cooldown (siehe data/-Ordner)
+            living.hurtServer(level, level.damageSources().source(BULLET, player), damage);
+            level.playSound(null, player.getX(), player.getY(), player.getZ(),
+                    headshot ? SoundEvents.PLAYER_LEVELUP : SoundEvents.ARROW_HIT_PLAYER,
                     SoundSource.PLAYERS, 0.8f, headshot ? 2.0f : 1.0f);
         }
     }
