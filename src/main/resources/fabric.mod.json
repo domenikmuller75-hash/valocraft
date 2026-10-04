@@ -1,0 +1,19 @@
+{
+  "schemaVersion": 1,
+  "id": "valorantcraft",
+  "version": "${version}",
+  "name": "ValorantCraft",
+  "description": "Valorant-Waffen und -Spielmodus fuer Minecraft (Fan-Projekt, nicht von Riot Games).",
+  "authors": ["Du"],
+  "license": "MIT",
+  "environment": "*",
+  "entrypoints": {
+    "main": ["dev.valorantcraft.ValorantCraft"]
+  },
+  "depends": {
+    "fabricloader": ">=0.19.5",
+    "minecraft": ">=26.3",
+    "java": ">=25",
+    "fabric-api": "*"
+  }
+}
