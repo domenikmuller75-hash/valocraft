@@ -157,6 +157,9 @@ public class WeaponItem extends Item {
             float damage = headshot ? weapon.headDamage() : weapon.bodyDamage();
             // Eigener Schadenstyp "bullet" umgeht Minecrafts Treffer-Cooldown (siehe data/-Ordner)
             living.hurtServer(level, level.damageSources().source(BULLET, player), damage);
+            if (living.isDeadOrDying()) {
+                Shop.add(player, Shop.KILL_REWARD);
+            }
             level.playSound(null, player.getX(), player.getY(), player.getZ(),
                     headshot ? SoundEvents.PLAYER_LEVELUP : SoundEvents.ARROW_HIT_PLAYER,
                     SoundSource.PLAYERS, 0.8f, headshot ? 2.0f : 1.0f);
